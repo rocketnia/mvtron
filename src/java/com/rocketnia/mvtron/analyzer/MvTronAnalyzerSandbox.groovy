@@ -16,6 +16,9 @@ import com.xuggle.mediatool.MediaToolAdapter
 import com.xuggle.mediatool.ToolFactory
 import com.xuggle.xuggler.video.IConverter
 
+
+// TODO: Figure out whether these will be needed.
+/*
 class ClosureImageListener extends MediaToolAdapter
 {
 	private Closure closure;
@@ -32,8 +35,6 @@ class ClosureImageListener extends MediaToolAdapter
 	}
 }
 
-// TODO: Figure out whether this will be needed.
-/*
 class ConverterSwapTool extends MediaToolAdapter
 {
 	private IConverter converter;
@@ -69,27 +70,12 @@ class ConverterSwapTool extends MediaToolAdapter
 		listeners.each { it.onVideoPicture( newEvent ) };
 	}
 }
-*/
 
 def il = { new ClosureImageListener( it ) };
+*/
 
-// image byte array listener
-// This works by modifying a single byte array over and over, so make sure not
-// to let the parameter escape the closure without keeping that in mind.
-def bl = { closure ->
-	
-	int[] bytes = null;
-	
-	return il {
-		
-		int width = it.width;
-		
-		bytes =
-			it.getRGB( it.minX, it.minY, width, it.height, bytes, 0, width );
-		
-		return closure( bytes );
-	};
-};
+
+def bl = { new RgbArrayListenerTool( it as IRgbArrayListener ) };
 
 def reader = ToolFactory.makeReader( filename );
 
@@ -104,6 +90,6 @@ long start = System.currentTimeMillis();
 while ( reader.readPacket() == null ) {}
 long time = System.currentTimeMillis() - start;
 
-println();
-println "Done! There were " + numberOfFrames +
-	" frames, and they were processed in " + time + "ms.";
+println ""
+println "Done! There were $numberOfFrames frames, and they were processed " +
+	"in ${time}ms."
