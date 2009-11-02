@@ -21,6 +21,9 @@ public class LumaAverager implements IIntArrayReferenceListener
 	
 	@Override
 	public void onIntArrayReference( int[] rgb )
+		{ propagateFloat( calculate( rgb ) ); }
+	
+	public static float calculate( int[] rgb )
 	{
 		int thisAverageLuma = 0;
 		
@@ -36,9 +39,7 @@ public class LumaAverager implements IIntArrayReferenceListener
 				(0xFF & pixel       );   // B
 		}
 		
-		float result = thisAverageLuma / maxAverageLuma / rgb.length;
-		
-		propagateFloat( result );
+		return thisAverageLuma / maxAverageLuma / rgb.length;
 	}
 	
 	public void addListener( IFloatListener listener )
