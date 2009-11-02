@@ -21,14 +21,14 @@ import com.xuggle.mediatool.IMediaListener;
 // efficency's sake, but interfacing code should not rely on that behavior.
 public class RgbArrayListenerTool implements IMediaListener
 {
-	private IRgbArrayListener delegate;
+	private IIntArrayReferenceListener delegate;
 	private int[] rgb = null;
 	private int minX = 0;
 	private int minY = 0;
 	private int width = 0;
 	private int height = 0;
 	
-	public RgbArrayListenerTool( IRgbArrayListener delegate )
+	public RgbArrayListenerTool( IIntArrayReferenceListener delegate )
 		{ this.delegate = delegate; }
 	
 	@Override public void onAddStream( IAddStreamEvent event ) {}
@@ -57,7 +57,7 @@ public class RgbArrayListenerTool implements IMediaListener
 		
 		rgb = image.getRGB( minX, minY, width, height, rgb, 0, width );
 		
-		delegate.onRgb( rgb );
+		delegate.onIntArrayReference( rgb );
 	}
 	
 	@Override public void onWriteHeader( IWriteHeaderEvent event ) {}

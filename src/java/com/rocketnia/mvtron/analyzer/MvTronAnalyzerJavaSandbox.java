@@ -13,7 +13,7 @@ public class MvTronAnalyzerJavaSandbox
 		Scanner in = new Scanner( System.in );
 		
 		prn( "This sandbox will loop through a video, printing the average" );
-		prn( "luma of each frame processed, scaled to the range 0..0x300-3." );
+		prn( "luma of each frame processed, scaled to the range 0.0..1.0." );
 		prn( "Then, it will print the number of frames and how long the loop" );
 		prn( "took." );
 		prn();
@@ -25,32 +25,19 @@ public class MvTronAnalyzerJavaSandbox
 		
 		reader.setBufferedImageTypeToGenerate( BufferedImage.TYPE_3BYTE_BGR );
 		
-		final int[] numberOfFrames = new int[] { 0 };
+		LumaAverager lumaAverager = new LumaAverager();
+		reader.addListener( lumaAverager.newTool() );
 		
-		final float maxAverageLuma = 0x300 - 3;
+		FrameCounter frameCounter = new FrameCounter();
+		reader.addListener( frameCounter.newTool() );
 		
-		reader.addListener( new RgbArrayListenerTool( new IRgbArrayListener() {
+		lumaAverager.addListener( new IFloatListener() {
 			
-			public void onRgb( int[] rgb )
+			public void onFloat( float f )
 			{
-				int thisAverageLuma = 0;
-				
-				for ( int pixel: rgb )
-				{
-					// The pixels are in ARGB format.
-					
-//					assert 0xFF == (0xFF & pixel >>> 24);  // alpha
-					
-					thisAverageLuma +=
-						(0xFF & pixel >>> 16) +  // R
-						(0xFF & pixel >>>  8) +  // G
-						(0xFF & pixel       );   // B
-				}
-				
-				prn( thisAverageLuma / maxAverageLuma / rgb.length );
-				numberOfFrames[ 0 ]++;
+				prn( f );
 			}
-		} ) );
+		} );
 		
 		
 		long start = System.currentTimeMillis();
@@ -58,7 +45,7 @@ public class MvTronAnalyzerJavaSandbox
 		long time = System.currentTimeMillis() - start;
 		
 		prn();
-		prn( "Done! There were " + numberOfFrames[ 0 ] +
+		prn( "Done! There were " + frameCounter.getData() +
 			" frames, and they were processed in" );
 		prn( time + "ms." );
 	}

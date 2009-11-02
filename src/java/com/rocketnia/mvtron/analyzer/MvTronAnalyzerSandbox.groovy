@@ -2,9 +2,9 @@ package com.rocketnia.mvtron.analyzer
 
 def read = System.in.newReader().&readLine;
 
-println "This sandbox will loop through a video, printing the class of each"
-println "object processed. Then, it will print the number of frames and how"
-println "long the loop took."
+println "This sandbox will loop through a video, printing the average luma of"
+println "each frame processed, scaled to the range 0.0..1.0. Then, it will"
+println "print the number of frames and how long the loop took."
 println ""
 print   "What file should be used? "; def filename = read();
 println ""
@@ -74,16 +74,17 @@ class ConverterSwapTool extends MediaToolAdapter
 def il = { new ClosureImageListener( it ) };
 */
 
-
-def bl = { new RgbArrayListenerTool( it as IRgbArrayListener ) };
-
 def reader = ToolFactory.makeReader( filename );
 
 reader.setBufferedImageTypeToGenerate( BufferedImage.TYPE_3BYTE_BGR );
 
-int numberOfFrames = 0;
+def lumaAverager = new LumaAverager();
+reader.addListener( lumaAverager.newTool() );
 
-reader.addListener( bl { println( it.class ); numberOfFrames++; } );
+def frameCounter = new FrameCounter();
+reader.addListener( frameCounter.newTool() );
+
+lumaAverager.addListener( { println it; } as IFloatListener );
 
 
 long start = System.currentTimeMillis();
@@ -91,5 +92,5 @@ while ( reader.readPacket() == null ) {}
 long time = System.currentTimeMillis() - start;
 
 println ""
-println "Done! There were $numberOfFrames frames, and they were processed " +
-	"in ${time}ms."
+println "Done! There were ${frameCounter.data} frames, and they were" +
+	" processed in ${time}ms."
