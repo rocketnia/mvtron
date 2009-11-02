@@ -6,7 +6,7 @@ package com.rocketnia.mvtron.analyzer;
 // defensively copy them itself rather than relying on the reference.
 // Modification of the original array by a listener may result in undefined
 // behavior including the modified data arriving at unknown other listeners
-// observing the event.
+// observing the same event.
 public interface IIntArrayReferenceListener
 {
 	public void onIntArrayReference( int[] array );
