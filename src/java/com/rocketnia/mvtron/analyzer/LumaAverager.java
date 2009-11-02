@@ -6,10 +6,10 @@ import java.util.List;
 
 public class LumaAverager implements IIntArrayReferenceListener
 {
-	private List< IFloatListener > floatListeners =
-		Collections.synchronizedList( new ArrayList< IFloatListener >() );
+	private List< IDoubleListener > doubleListeners =
+		Collections.synchronizedList( new ArrayList< IDoubleListener >() );
 	
-	private static final float maxAverageLuma = 0xFF * 3;
+	private static final double maxAverageLuma = 0xFF * 3;
 	
 	public LumaAverager() {}
 	
@@ -21,9 +21,9 @@ public class LumaAverager implements IIntArrayReferenceListener
 	
 	@Override
 	public void onIntArrayReference( int[] rgb )
-		{ propagateFloat( calculate( rgb ) ); }
+		{ propagateDouble( calculate( rgb ) ); }
 	
-	public static float calculate( int[] rgb )
+	public static double calculate( int[] rgb )
 	{
 		int thisAverageLuma = 0;
 		
@@ -42,12 +42,12 @@ public class LumaAverager implements IIntArrayReferenceListener
 		return thisAverageLuma / maxAverageLuma / rgb.length;
 	}
 	
-	public void addListener( IFloatListener listener )
-		{ floatListeners.add( listener ); }
+	public void addListener( IDoubleListener listener )
+		{ doubleListeners.add( listener ); }
 	
-	protected void propagateFloat( float f )
+	protected void propagateDouble( double d )
 	{
-		for ( IFloatListener listener: floatListeners )
-			listener.onFloat( f );
+		for ( IDoubleListener listener: doubleListeners )
+			listener.onDouble( d );
 	}
 }
