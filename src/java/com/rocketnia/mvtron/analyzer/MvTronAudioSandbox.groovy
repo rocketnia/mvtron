@@ -11,6 +11,7 @@ println ""
 print   "What file should be used? "; def filename = read();
 println ""
 
+import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D
 import java.awt.image.BufferedImage
 import javax.swing.JFrame
 import com.xuggle.mediatool.*
@@ -84,6 +85,7 @@ def maxAbsolutes = [];
 def minAbsolutes = [];
 def meanAbsolutes = [];
 def rootMeanSquares = [];
+def peakFrequencyHistogram = [:];
 reader.addListener( [
 	onAudioSamples: { IAudioSamplesEvent event ->
 		
@@ -108,6 +110,37 @@ reader.addListener( [
 			minAbsolute = Math.min( minAbsolute, absolute );
 			sumAbsolute += absolute;
 			sumSquare += sample * sample;
+		}
+		
+		if ( channels != 0 )
+		{
+			double[] sampleArray = new double[ numSamples ];
+			int numSamplesUsed = Math.min( Integer.MAX_VALUE, numSamples );
+			
+			for ( int s = 0; s < numSamplesUsed; s++ )
+				sampleArray[ s ] = samples.getSample( s, 0, format );
+			
+			new DoubleFFT_1D( numSamplesUsed ).realForward( sampleArray );
+			
+			Set thesePeakIndices = [];
+			double thisPeakValue = Double.NEGATIVE_INFINITY;
+			for ( int s = 0; s < numSamplesUsed; s += 2 )
+			{
+				double thisCandidate = sampleArray[ s ];
+				
+				if ( thisCandidate < thisPeakValue )
+					continue;
+				
+				if ( thisPeakValue < thisCandidate )
+					thesePeakIndices = [];
+				
+				thesePeakIndices.add( s >> 1 );
+				thisPeakValue = thisCandidate;
+			}
+			
+			assert !thesePeakIndices.empty;
+			peakFrequencyHistogram.put( thesePeakIndices,
+				(peakFrequencyHistogram.get( thesePeakIndices ) ?: 0) + 1 );
 		}
 		
 		maxAbsolutes.add( (double)maxAbsolute / 0x10000 );
@@ -139,6 +172,17 @@ println( "minAbsolutes min: " + minAbsolutes.min() );
 println( "meanAbsolutes mean: " + meanAbsolutes.sum() / numberOfFrames );
 println( "rootMeanSquares rms: " +
 	Math.sqrt( rootMeanSquares.collect { it * it }.sum() / numberOfFrames ) );
+println ""
+println( "peakFrequencyHistogram:" );
+
+int lastFrequency = peakFrequencyHistogram.keySet()*.max().max();
+(peakFrequencyHistogram.keySet()
+	+ (0..lastFrequency).collect { [ it ] as Set }).
+	sort { a, b -> a.size() - b.size() }.sort { a, b -> a.min() - b.min() }.
+	each { key ->
+	
+	println( "" + key.sort() + " -> " + (peakFrequencyHistogram[ key ] ?: 0) );
+};
 
 println ""
 println "Done!"
