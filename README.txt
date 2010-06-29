@@ -20,13 +20,16 @@ audio.
 For the moment, these features take form as a scattered collection of
 demos, JVM classes with "Sandbox" in their names, which can be run
 from the command line. You'll need a video of your own handy; we're
-not keeping those in the repository. ^_^ You'll probably also need to
-get version 3.3.940 of Xuggler from
-http://xuggle.com/xuggler/downloads/releases.jsp. The .jar is in this
-repo, but Xuggler depends on native libraries as well. And by the way,
-you'll have to figure out how to compile MVTron's Java and Groovy code
-against the .jars yourself, since there isn't any sort of handy build
-script....
+not keeping those in the repository. ^_^ You'll also need to get
+version 3.3.940 of Xuggler from
+http://xuggle.com/xuggler/downloads/releases.jsp and version 2.3 of
+JTransforms from
+http://sites.google.com/site/piotrwendykier/software/jtransforms and
+figure out how to compile this code against them. (FYI, Xuggler is
+licensed under the LGPL, and JTransforms is licensed under an
+MPL/GPL/LGPL disjunctive license.) Finally, Xuggler will also need to
+be set up on the machine you use MVTron on, since it depends on native
+libraries.
 
 Yeah, this may make MVTron a pain to install! MVTron is a tool
 primarily targeted at myself and secondarily targeted at programmers
