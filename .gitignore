@@ -1,0 +1,22 @@
+# .gitignore
+#
+# Copyright 2010 Ross Angle
+
+
+# Ignore all build artifacts, including Eclipse project files (which
+# are built by the gradle "eclipse" task).
+/build/
+/.classpath
+/.project
+
+# Ignore the extraneous files Gradle makes.
+/.gradle/
+
+# Ignore the lib directory, so that the build script can look for
+# dependency .jar files there by default. The alternative would be for
+# every MVTron user to have to modify the build script to account for
+# his or her own preferred classpath setup. We don't have to go out of
+# our way to cater to people who *do* want to do that, since we
+# couldn't stop them if we tried, so instead we cater to the people
+# who don't want to do that.
+/lib/
