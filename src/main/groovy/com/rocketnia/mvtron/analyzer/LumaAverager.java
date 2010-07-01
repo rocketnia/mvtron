@@ -1,3 +1,7 @@
+// LumaAverager.java
+//
+// Copyright 2009, 2010 Ross Angle
+
 package com.rocketnia.mvtron.analyzer;
 
 import java.util.ArrayList;
@@ -7,7 +11,8 @@ import java.util.List;
 public class LumaAverager implements IIntArrayReferenceListener
 {
 	private List< IDoubleListener > doubleListeners =
-		Collections.synchronizedList( new ArrayList< IDoubleListener >() );
+		Collections.synchronizedList(
+			new ArrayList< IDoubleListener >() );
 	
 	private static final double maxAverageLuma = 0xFF * 3;
 	

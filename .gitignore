@@ -20,3 +20,6 @@
 # couldn't stop them if we tried, so instead we cater to the people
 # who don't want to do that.
 /lib/
+
+# Ignore the error log Xuggler keeps.
+/test.log

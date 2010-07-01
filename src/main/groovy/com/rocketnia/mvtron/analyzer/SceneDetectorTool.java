@@ -1,3 +1,7 @@
+// SceneDetectorTool.java
+//
+// Copyright 2009, 2010 Ross Angle
+
 package com.rocketnia.mvtron.analyzer;
 
 import java.util.ArrayList;
@@ -7,7 +11,8 @@ import java.util.List;
 public class SceneDetectorTool implements IIntArrayWindowListener
 {
 	private List< IDoubleListener > doubleListeners =
-		Collections.synchronizedList( new ArrayList< IDoubleListener >() );
+		Collections.synchronizedList(
+			new ArrayList< IDoubleListener >() );
 	
 	private ISceneDetector detector;
 	
@@ -24,7 +29,8 @@ public class SceneDetectorTool implements IIntArrayWindowListener
 		if ( spacing < 0 )
 			throw new IllegalArgumentException();
 		
-		IntArrayTimeWindower windower = new IntArrayTimeWindower( spacing + 1 );
+		IntArrayTimeWindower windower =
+			new IntArrayTimeWindower( spacing + 1 );
 		
 		windower.addListener( this );
 		
@@ -44,8 +50,8 @@ public class SceneDetectorTool implements IIntArrayWindowListener
 	
 	@Override public void onLateWindow( List< int[] > window ) {}
 	
-	// Whoops, these are calculations that are better off done /after/ the video
-	// is scrubbed.
+	// Whoops, these are calculations that are better off done *after*
+	// the video is scrubbed.
 	/*
 	public static boolean calculateEarly( List< int[] > window )
 	{

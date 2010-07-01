@@ -1,3 +1,7 @@
+// TaxicabSceneDetector.java
+//
+// Copyright 2009, 2010 Ross Angle
+
 package com.rocketnia.mvtron.analyzer.scenedetectors;
 
 import com.rocketnia.mvtron.analyzer.ISceneDetector;
@@ -6,9 +10,11 @@ import com.rocketnia.mvtron.analyzer.SceneDetectorTool;
 
 public class TaxicabSceneDetector implements ISceneDetector
 {
-	private static TaxicabSceneDetector instance = new TaxicabSceneDetector();
+	private static TaxicabSceneDetector instance =
+		new TaxicabSceneDetector();
 	private TaxicabSceneDetector() {}
-	public static TaxicabSceneDetector getInstance() { return instance; }
+	public static TaxicabSceneDetector getInstance()
+		{ return instance; }
 	
 	public static SceneDetectorTool makeTool()
 		{ return new SceneDetectorTool( instance ); }
@@ -39,7 +45,8 @@ public class TaxicabSceneDetector implements ISceneDetector
 			int gDiff = (0xFF & pi >>>   8) - (0xFF & ni >>>   8);
 			int bDiff = (0xFF & pi        ) - (0xFF & ni        );
 			
-			// This is the the taxicab norm of [ rDiff, gDiff, bDiff ].
+			// This is the the taxicab norm of
+			// [ rDiff, gDiff, bDiff ].
 			integerDistance +=
 				(rDiff < 0 ? -rDiff : rDiff) +
 				(gDiff < 0 ? -gDiff : gDiff) +

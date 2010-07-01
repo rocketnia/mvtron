@@ -1,3 +1,7 @@
+// RgbArrayListenerTool.java
+//
+// Copyright 2009, 2010 Ross Angle
+
 package com.rocketnia.mvtron.analyzer;
 
 import java.awt.image.BufferedImage;
@@ -16,9 +20,10 @@ import com.xuggle.mediatool.event.IWritePacketEvent;
 import com.xuggle.mediatool.event.IWriteTrailerEvent;
 import com.xuggle.mediatool.IMediaListener;
 
-// This class will pass along any BufferedImage events it receives to an
-// IRgbArrayListener object. It uses the same int array over and over for
-// efficency's sake, but interfacing code should not rely on that behavior.
+// This class will pass along any BufferedImage events it receives to
+// an IRgbArrayListener object. It uses the same int array over and
+// over for efficency's sake, but interfacing code should not rely on
+// that behavior.
 public class RgbArrayListenerTool implements IMediaListener
 {
 	private IIntArrayReferenceListener delegate;
@@ -32,7 +37,8 @@ public class RgbArrayListenerTool implements IMediaListener
 		{ this.delegate = delegate; }
 	
 	@Override public void onAddStream( IAddStreamEvent event ) {}
-	@Override public void onAudioSamples( IAudioSamplesEvent event ) {}
+	@Override public void onAudioSamples( IAudioSamplesEvent event )
+		{}
 	@Override public void onClose( ICloseEvent event ) {}
 	@Override public void onCloseCoder( ICloseCoderEvent event ) {}
 	@Override public void onFlush( IFlushEvent event ) {}
@@ -55,12 +61,14 @@ public class RgbArrayListenerTool implements IMediaListener
 			height = image.getHeight();
 		}
 		
-		rgb = image.getRGB( minX, minY, width, height, rgb, 0, width );
+		rgb =
+			image.getRGB( minX, minY, width, height, rgb, 0, width );
 		
 		delegate.onIntArrayReference( rgb );
 	}
 	
 	@Override public void onWriteHeader( IWriteHeaderEvent event ) {}
 	@Override public void onWritePacket( IWritePacketEvent event ) {}
-	@Override public void onWriteTrailer( IWriteTrailerEvent event ) {}
+	@Override public void onWriteTrailer( IWriteTrailerEvent event )
+		{}
 }

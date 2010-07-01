@@ -1,3 +1,7 @@
+// EuclideanSceneDetector.java
+//
+// Copyright 2009, 2010 Ross Angle
+
 package com.rocketnia.mvtron.analyzer.scenedetectors;
 
 import com.rocketnia.mvtron.analyzer.ISceneDetector;
@@ -9,7 +13,8 @@ public class EuclideanSceneDetector implements ISceneDetector
 	private static EuclideanSceneDetector instance =
 		new EuclideanSceneDetector();
 	private EuclideanSceneDetector() {}
-	public static EuclideanSceneDetector getInstance() { return instance; }
+	public static EuclideanSceneDetector getInstance()
+		{ return instance; }
 	
 	public static SceneDetectorTool makeTool()
 		{ return new SceneDetectorTool( instance ); }
@@ -49,6 +54,7 @@ public class EuclideanSceneDetector implements ISceneDetector
 				bDiff * bDiff;
 		}
 		
-		return Math.sqrt( integerDistanceSquared * distanceSquaredFactor );
+		return Math.sqrt(
+			integerDistanceSquared * distanceSquaredFactor );
 	}
 }

@@ -1,3 +1,7 @@
+// MVTronAnalyzerJavaSandbox.java
+//
+// Copyright 2009, 2010 Ross Angle
+
 package com.rocketnia.mvtron.analyzer;
 
 import java.awt.image.BufferedImage;
@@ -8,8 +12,10 @@ import java.util.Scanner;
 import java.util.TreeSet;
 
 
-import com.rocketnia.mvtron.analyzer.scenedetectors.EuclideanSceneDetector;
-import com.rocketnia.mvtron.analyzer.scenedetectors.TaxicabSceneDetector;
+import com.rocketnia.mvtron.analyzer.scenedetectors.
+	EuclideanSceneDetector;
+import com.rocketnia.mvtron.analyzer.scenedetectors.
+	TaxicabSceneDetector;
 import com.xuggle.mediatool.IMediaReader;
 import com.xuggle.mediatool.ToolFactory;
 
@@ -19,13 +25,17 @@ public class MvTronAnalyzerJavaSandbox
 	{
 		Scanner in = new Scanner( System.in );
 		
-		prn( "This sandbox will loop through a video, printing the distances" );
-		prn( "found between each frame and the frames one and two behind it," );
-		prn( "scaled to the range 0.0..1.0. Then, it will print the number" );
-		prn( "of frames and how long the loop took. Finally, it will print" );
-		prn( "the top ten \"unblurred\" distances (calculated from the" );
-		prn( "single and double distances), which should be good places to" );
-		prn( "look for scene breaks." );
+		prn( "This sandbox will loop through a video, printing the"
+			+ " distances found" );
+		prn( "between each frame and the frames one and two behind"
+			+ " it, scaled to the" );
+		prn( "range 0.0..1.0. Then, it will print the number of"
+			+ " frames and how long" );
+		prn( "the loop took. Finally, it will print the top ten"
+			+ " \"unblurred\"" );
+		prn( "distances (calculated from the single and double"
+			+ " distances), which" );
+		prn( "should be good places to look for scene breaks." );
 		prn();
 		pr( "What file should be used? " );
 		String filename = in.nextLine();
@@ -33,13 +43,17 @@ public class MvTronAnalyzerJavaSandbox
 		
 		IMediaReader reader = ToolFactory.makeReader( filename );
 		
-		reader.setBufferedImageTypeToGenerate( BufferedImage.TYPE_3BYTE_BGR );
+		reader.setBufferedImageTypeToGenerate(
+			BufferedImage.TYPE_3BYTE_BGR );
 		
 		
-		SceneDetectorTool singleDetector = TaxicabSceneDetector.makeTool();
-		IntArrayTimeWindower singleWindower = singleDetector.newWindower( 1 );
+		SceneDetectorTool singleDetector =
+			TaxicabSceneDetector.makeTool();
+		IntArrayTimeWindower singleWindower =
+			singleDetector.newWindower( 1 );
 		reader.addListener( singleWindower.newTool() );
-		final List< Double > singleDistances = new ArrayList< Double >();
+		final List< Double > singleDistances =
+			new ArrayList< Double >();
 		singleDistances.add( (double)0 );
 		singleDetector.addListener( new IDoubleListener() {
 			
@@ -50,10 +64,13 @@ public class MvTronAnalyzerJavaSandbox
 			}
 		} );
 		
-		SceneDetectorTool doubleDetector = TaxicabSceneDetector.makeTool();
-		IntArrayTimeWindower doubleWindower = doubleDetector.newWindower( 2 );
+		SceneDetectorTool doubleDetector =
+			TaxicabSceneDetector.makeTool();
+		IntArrayTimeWindower doubleWindower =
+			doubleDetector.newWindower( 2 );
 		reader.addListener( doubleWindower.newTool() );
-		final List< Double > doubleDistances = new ArrayList< Double >();
+		final List< Double > doubleDistances =
+			new ArrayList< Double >();
 		doubleDistances.add( (double)0 );
 		doubleDistances.add( (double)0 );
 		doubleDetector.addListener( new IDoubleListener() {
@@ -68,8 +85,8 @@ public class MvTronAnalyzerJavaSandbox
 		
 		long start = System.currentTimeMillis();
 		while ( reader.readPacket() == null ) {}
-		// The windowers made above would be closed now, but that doesn't
-		// actually do anything in this case.
+		// The windowers made above would be closed now, but that
+		// doesn't actually do anything in this case.
 		long time = System.currentTimeMillis() - start;
 		
 		
@@ -77,17 +94,19 @@ public class MvTronAnalyzerJavaSandbox
 		assert numberOfFrames == doubleDistances.size();
 		
 		singleDistances.add( (double)0 );
-		doubleDistances.add( singleDistances.get( numberOfFrames - 1 ) );
+		doubleDistances.add(
+			singleDistances.get( numberOfFrames - 1 ) );
 		
 		
 		prn();
 		prn( "Done! There were " + numberOfFrames +
-			" frames, and they were processed in" );
-		prn( time + "ms. Now for the scene detection:" );
+			" frames, and they were processed in " + time + "ms." );
+		prn( "Now for the scene detection:" );
 		prn();
 		
 		
-		final List< Double > unblurredDistances = new ArrayList< Double >();
+		final List< Double > unblurredDistances =
+			new ArrayList< Double >();
 		if ( numberOfFrames != 0 )
 			unblurredDistances.add( (double)0 );
 		for ( int i = 1; i < numberOfFrames; i++ )
@@ -107,7 +126,8 @@ public class MvTronAnalyzerJavaSandbox
 		
 		
 		NavigableSet< Double > topUnblurredDistances =
-			new TreeSet< Double >( unblurredDistances ).descendingSet();
+			new TreeSet< Double >( unblurredDistances ).
+				descendingSet();
 		
 		int i = 0;
 		for ( double distance: topUnblurredDistances )
@@ -115,14 +135,13 @@ public class MvTronAnalyzerJavaSandbox
 			if ( 10 <= i )
 				break;
 			
-			// TODO: There's a chance two frames will have exactly the same
-			// distance, but this is good enough for a demo. If this turns into
-			// something more than a demo, fix it.
+			// TODO: There's a chance two frames will have exactly the
+			// same distance, but this is good enough for a demo. If
+			// this turns into something more than a demo, fix it.
 			int frame = unblurredDistances.indexOf( distance );
 			
-			prn(
-				"Frame " + frame + " has unblurred distance " + distance + "."
-			);
+			prn( "Frame " + frame + " has unblurred distance "
+				+ distance + "." );
 			
 			i++;
 		}
@@ -135,13 +154,17 @@ public class MvTronAnalyzerJavaSandbox
 	{
 		Scanner in = new Scanner( System.in );
 		
-		prn( "This sandbox will loop through a video, printing the distances" );
-		prn( "found between each frame and the frame behind it, scaled to" );
-		prn( "the range 0.0..1.0. Then, it will print the number of frames" );
-		prn( "and how long the loop took. Finally, it will print the top" );
-		prn( "\"unblurred\" distances greater than half the maximum" );
-		prn( "unblurred distance, which should be good places to look for" );
-		prn( "scene breaks." );
+		prn( "This sandbox will loop through a video, printing the"
+			+ " distances found" );
+		prn( "between each frame and the frame behind it, scaled to"
+			+ " the range" );
+		prn( "0.0..1.0. Then, it will print the number of frames and"
+			+ " how long the" );
+		prn( "loop took. Finally, it will print the top \"unblurred\""
+			+ " distances" );
+		prn( "greater than half the maximum unblurred distance, which"
+			+ " should be good" );
+		prn( "places to look for scene breaks." );
 		prn();
 		pr( "What file should be used? " );
 		String filename = in.nextLine();
@@ -149,10 +172,12 @@ public class MvTronAnalyzerJavaSandbox
 		
 		IMediaReader reader = ToolFactory.makeReader( filename );
 		
-		reader.setBufferedImageTypeToGenerate( BufferedImage.TYPE_3BYTE_BGR );
+		reader.setBufferedImageTypeToGenerate(
+			BufferedImage.TYPE_3BYTE_BGR );
 		
 		
-		SceneDetectorTool detector = EuclideanSceneDetector.makeTool();
+		SceneDetectorTool detector =
+			EuclideanSceneDetector.makeTool();
 		IntArrayTimeWindower windower = detector.newWindower( 1 );
 		reader.addListener( windower.newTool() );
 		final List< Double > distances = new ArrayList< Double >();
@@ -169,8 +194,8 @@ public class MvTronAnalyzerJavaSandbox
 		
 		long start = System.currentTimeMillis();
 		while ( reader.readPacket() == null ) {}
-		// The windower made above would be closed now, but that doesn't
-		// actually do anything in this case.
+		// The windower made above would be closed now, but that
+		// doesn't actually do anything in this case.
 		long time = System.currentTimeMillis() - start;
 		
 		
@@ -181,12 +206,13 @@ public class MvTronAnalyzerJavaSandbox
 		
 		prn();
 		prn( "Done! There were " + numberOfFrames +
-			" frames, and they were processed in" );
-		prn( time + "ms. Now for the scene detection:" );
+			" frames, and they were processed in " + time + "ms." );
+		prn( "Now for the scene detection:" );
 		prn();
 		
 		
-		final List< Double > unblurredDistances = new ArrayList< Double >();
+		final List< Double > unblurredDistances =
+			new ArrayList< Double >();
 		if ( numberOfFrames != 0 )
 			unblurredDistances.add( (double)0 );
 		for ( int i = 1; i < numberOfFrames; i++ )
@@ -197,7 +223,10 @@ public class MvTronAnalyzerJavaSandbox
 				mockBool( thisDistance ),
 				Math.min(
 					mockBool( thisDistance ),
-					Math.max( distances.get( i - 1 ), distances.get( i + 1 ) )
+					Math.max(
+						distances.get( i - 1 ),
+						distances.get( i + 1 )
+					)
 				)
 			) );
 		}
@@ -209,16 +238,18 @@ public class MvTronAnalyzerJavaSandbox
 		if ( numberOfFrames != 0 )
 		{
 			for ( double distance: worstUnblurredDistances.
-					tailSet( worstUnblurredDistances.last() / 2, true ).
+					tailSet(
+						worstUnblurredDistances.last() / 2, true ).
 					descendingSet() )
 			{
-				// TODO: There's a chance two frames will have exactly the same
-				// distance, but this is good enough for a demo. If this turns
-				// into something more than a demo, fix it.
+				// TODO: There's a chance two frames will have exactly
+				// the same distance, but this is good enough for a
+				// demo. If this turns into something more than a
+				// demo, fix it.
 				int frame = unblurredDistances.indexOf( distance );
 				
-				prn( "Frame " + frame + " has unblurred distance " + distance +
-					"." );
+				prn( "Frame " + frame + " has unblurred distance "
+					+ distance + "." );
 			}
 		}
 		
@@ -227,15 +258,18 @@ public class MvTronAnalyzerJavaSandbox
 	}
 	
 	private static void prn() { System.out.println(); }
-	private static void prn( Object s ) { System.out.println( s.toString() ); }
-	private static void pr ( Object s ) { System.out.print  ( s.toString() ); }
+	private static void prn( Object s ) { System.out.println( s ); }
+	private static void pr ( Object s ) { System.out.print( s ); }
 	
 	private static double mockBool( double a )
 		{ return a; }  // the best?
-//		{ return or( a, a ); }  // extremely good, but still not worth computing
-//		{ return Math.sqrt( a ); }  // good, but not as good as { return a; }
+//		{ return or( a, a ); }
+//			// extremely good, but still not worth computing
+//		{ return Math.sqrt( a ); }
+//			// good, but not as good as { return a; }
 //		{ return Math.sqrt( or( a, a ) ); }  // not very good at all
-//		{ return and( a, a ); }  // extremely poor; incorrect on faded breaks
+//		{ return and( a, a ); }
+//			// extremely poor; incorrect on faded breaks
 /*	{
 		final double power = 3;
 		

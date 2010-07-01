@@ -1,3 +1,7 @@
+// IntArrayTimeWindower.java
+//
+// Copyright 2009, 2010 Ross Angle
+
 package com.rocketnia.mvtron.analyzer;
 
 import java.util.ArrayList;
@@ -5,7 +9,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-public class IntArrayTimeWindower implements IIntArrayReferenceListener
+public class IntArrayTimeWindower
+	implements IIntArrayReferenceListener
 {
 	protected boolean fullWindow;
 	protected LinkedList< int[] > frames;
@@ -32,7 +37,8 @@ public class IntArrayTimeWindower implements IIntArrayReferenceListener
 		if ( fullWindow )
 		{
 			int[] storedArray = frames.removeFirst();
-			System.arraycopy( array, 0, storedArray, 0, array.length );
+			System.arraycopy(
+				array, 0, storedArray, 0, array.length );
 			frames.addLast( storedArray );
 			
 			propagateMiddleWindow( frames );
