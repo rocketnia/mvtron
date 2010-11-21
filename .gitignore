@@ -6,6 +6,7 @@
 # Ignore all build artifacts, including Eclipse project files (which
 # are built by the gradle "eclipse" task).
 /build/
+/.settings/
 /.classpath
 /.project
 
