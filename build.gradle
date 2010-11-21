@@ -18,19 +18,13 @@ repositories { mavenCentral() }
 dependencies {
 	
 	// Gradle's Groovy plugin doesn't specify the Groovy
-	// implementation for us, so we specify it ourselves. Right now
-	// we're using Groovy 1.7.0 rather than 1.7.2 in order to match up
-	// with the version Eclipse's Groovy plugin uses.
-	groovy 'org.codehaus.groovy:groovy:1.7.0'
+	// implementation for us, so we specify it ourselves.
+	groovy 'org.codehaus.groovy:groovy:1.7.5'
 	
 	// Gradle's unit test support requires us to specify a tool for
-	// that as well. We'd use JUnit 4.8.2, but only 4.8.1 is in the
-	// Maven repository for the time being.
-	//
-	// However, right now we don't have any tests, so we'll leave this
-	// out!
-	//
-//	testCompile 'junit:junit:4.8.1'
+	// that as well. However, right now we don't have any tests, so
+	// we'll leave this out!
+//	testCompile 'junit:junit:4.8.2'
 }
 
 
