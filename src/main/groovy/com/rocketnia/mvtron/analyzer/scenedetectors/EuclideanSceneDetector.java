@@ -28,7 +28,7 @@ public class EuclideanSceneDetector implements ISceneDetector
 	public IntArrayTimeWindower newWindower( int spacing )
 		{ return newTool().newWindower( spacing ); }
 	
-	@Override
+	// @Override
 	public double measureDistance( int[] p, int[] n )
 	{
 		int length = p.length;

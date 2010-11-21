@@ -16,7 +16,7 @@ public class FrameCounter implements IIntArrayReferenceListener
 	public RgbArrayListenerTool newTool()
 		{ return new RgbArrayListenerTool( this ); }
 	
-	@Override
+	// @Override
 	public void onIntArrayReference( int[] rgb )
 	{
 		count++;

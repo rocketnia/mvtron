@@ -37,9 +37,10 @@ public class SceneDetectorTool implements IIntArrayWindowListener
 		return windower;
 	}
 	
-	@Override public void onEarlyWindow( List< int[] > window ) {}
+	// @Override
+	public void onEarlyWindow( List< int[] > window ) {}
 	
-	@Override
+	// @Override
 	public void onMiddleWindow( List< int[] > window )
 	{
 		propagateDouble( detector.measureDistance(
@@ -48,7 +49,8 @@ public class SceneDetectorTool implements IIntArrayWindowListener
 		) );
 	}
 	
-	@Override public void onLateWindow( List< int[] > window ) {}
+	// @Override
+	public void onLateWindow( List< int[] > window ) {}
 	
 	// Whoops, these are calculations that are better off done *after*
 	// the video is scrubbed.

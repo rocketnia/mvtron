@@ -36,17 +36,18 @@ public class RgbArrayListenerTool implements IMediaListener
 	public RgbArrayListenerTool( IIntArrayReferenceListener delegate )
 		{ this.delegate = delegate; }
 	
-	@Override public void onAddStream( IAddStreamEvent event ) {}
-	@Override public void onAudioSamples( IAudioSamplesEvent event )
-		{}
-	@Override public void onClose( ICloseEvent event ) {}
-	@Override public void onCloseCoder( ICloseCoderEvent event ) {}
-	@Override public void onFlush( IFlushEvent event ) {}
-	@Override public void onOpen( IOpenEvent event ) {}
-	@Override public void onOpenCoder( IOpenCoderEvent event ) {}
-	@Override public void onReadPacket( IReadPacketEvent event ) {}
+	// NOTE: All of these would have @Override if the Groovy-Eclipse
+	// plugin could understand that they actually overrode things.
+	public void onAddStream( IAddStreamEvent event ) {}
+	public void onAudioSamples( IAudioSamplesEvent event ) {}
+	public void onClose( ICloseEvent event ) {}
+	public void onCloseCoder( ICloseCoderEvent event ) {}
+	public void onFlush( IFlushEvent event ) {}
+	public void onOpen( IOpenEvent event ) {}
+	public void onOpenCoder( IOpenCoderEvent event ) {}
+	public void onReadPacket( IReadPacketEvent event ) {}
 	
-	@Override
+	// @Override
 	public void onVideoPicture( IVideoPictureEvent event )
 	{
 		BufferedImage image = event.getImage();
@@ -67,8 +68,9 @@ public class RgbArrayListenerTool implements IMediaListener
 		delegate.onIntArrayReference( rgb );
 	}
 	
-	@Override public void onWriteHeader( IWriteHeaderEvent event ) {}
-	@Override public void onWritePacket( IWritePacketEvent event ) {}
-	@Override public void onWriteTrailer( IWriteTrailerEvent event )
-		{}
+	// NOTE: All of these would have @Override if the Groovy-Eclipse
+	// plugin could understand that they actually overrode things.
+	public void onWriteHeader( IWriteHeaderEvent event ) {}
+	public void onWritePacket( IWritePacketEvent event ) {}
+	public void onWriteTrailer( IWriteTrailerEvent event ) {}
 }

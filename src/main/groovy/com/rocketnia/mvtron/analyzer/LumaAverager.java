@@ -24,7 +24,7 @@ public class LumaAverager implements IIntArrayReferenceListener
 	public RgbArrayListenerTool newTool()
 		{ return new RgbArrayListenerTool( this ); }
 	
-	@Override
+	// @Override
 	public void onIntArrayReference( int[] rgb )
 		{ propagateDouble( calculate( rgb ) ); }
 	

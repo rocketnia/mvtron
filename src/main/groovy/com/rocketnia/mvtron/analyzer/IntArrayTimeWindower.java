@@ -31,7 +31,7 @@ public class IntArrayTimeWindower
 	public RgbArrayListenerTool newTool()
 		{ return new RgbArrayListenerTool( this ); }
 	
-	@Override
+	// @Override
 	public void onIntArrayReference( int[] array )
 	{
 		if ( fullWindow )
