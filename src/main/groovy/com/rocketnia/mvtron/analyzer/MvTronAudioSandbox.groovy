@@ -1,8 +1,28 @@
 // MVTronAnalyzerSandbox.groovy
 //
-// Copyright 2009, 2010 Ross Angle
+// Copyright 2009, 2010, 2021 Ross Angle
 
 package com.rocketnia.mvtron.analyzer
+
+import java.awt.image.BufferedImage
+import java.nio.ByteBuffer
+import javax.swing.JFrame
+
+import org.jtransforms.dct.DoubleDCT_1D
+import org.jtransforms.fft.DoubleFFT_1D
+import org.freedesktop.gstreamer.Bus
+import org.freedesktop.gstreamer.FlowReturn
+import org.freedesktop.gstreamer.Gst
+import org.freedesktop.gstreamer.Pad
+import org.freedesktop.gstreamer.PadProbeReturn
+import org.freedesktop.gstreamer.PadProbeType
+import org.freedesktop.gstreamer.Pipeline
+import org.freedesktop.gstreamer.Sample
+import org.freedesktop.gstreamer.Structure
+import org.freedesktop.gstreamer.Version
+import org.freedesktop.gstreamer.elements.AppSink
+
+import com.rocketnia.mvtron.analyzer.scenedetectors.EuclideanSceneDetector
 
 
 // TODO: Decide what to do about the fact that some audio frames have
@@ -33,25 +53,41 @@ println ""
 // them each to linear combinations of the nearest two original bins),
 // or move it to a library.
 
-import edu.emory.mathcs.jtransforms.dct.DoubleDCT_1D
-import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D
-import java.awt.image.BufferedImage
-import javax.swing.JFrame
-import com.xuggle.mediatool.*
-import com.xuggle.mediatool.event.*
-import com.xuggle.xuggler.*
-import com.xuggle.xuggler.video.IConverter
-import com.rocketnia.mvtron.analyzer.scenedetectors.
-	EuclideanSceneDetector
 
+Gst.init Version.BASELINE, "MVTronAnalyzerSandbox"
 
-def reader = ToolFactory.makeReader( filename )
+// TODO: The `qtdemux` element will typically work if the input is an
+// mp4,  but we should probably support more audio formats.
+def pipelineSpec = """
+	filesrc name=src ! qtdemux name=demux
+	
+	demux.audio_0 ! queue ! decodebin ! audioconvert
+	! audioresample ! audio/x-raw, format=S16LE ! appsink name=dst
+"""
+// NOTE: This alternative pipeline uses a test source instead of an
+// input file.
+//def pipelineSpec = """
+//	audiotestsrc num-buffers=100 ! audioconvert
+//	! audioresample ! audio/x-raw, format=S16LE ! appsink name=dst
+//"""
+def pipe = (Pipeline) Gst.parseLaunch( pipelineSpec )
+def src = pipe.getElementByName( "src" )
+def dstAppSink = (AppSink) pipe.getElementByName( "dst" )
+dstAppSink.set "emit-signals", true
+dstAppSink.set "sync", false
+def dst = dstAppSink.getStaticPad( "sink" )
+
+src.set "location", filename
 
 
 // This commented-out section implements playing a modified version of
 // the stream with the volume raising and lowering between no volume
 // and double volume according to a sine wave with a period of pi
 // seconds.
+//
+// It's written in terms of `MediaToolAdapter`, `MyMediaToolProxy`,
+// and `ToolFactory` from a rather old version of Xuggle Xuggler.
+// (TODO: Migrate this to GStreamer.)
 //
 /*
 class MyMediaToolProxy extends MediaToolAdapter
@@ -121,24 +157,45 @@ def rootMeanSquares = []
 def peakHertzFrequencyHistogram = [:]
 def peakMelFrequencyHistogram = [:]
 def peakMfccHistogram = [:]
-reader.addListener( [ onAudioSamples: { IAudioSamplesEvent event ->
-	
-	def samples = event.audioSamples
-	
-	long numSamples = samples.numSamples
-	int channels = samples.channels
-	def format = samples.format
-	
-	assert format == IAudioSamples.Format.FMT_S16
+
+
+def handleSampleWithMappedBuffer = {
+	Structure capsStructure,
+	ByteBuffer nioByteBuffer
+	->
+	def format = capsStructure.getString "format"
+	int sampleRate = capsStructure.getInteger "rate"
+	int channels = capsStructure.getInteger "channels"
+	def layoutString = capsStructure.getString "layout"
+	// TODO: Handle sample formats other than S16LE.
+	assert format == "S16LE"
+	// TODO: Figure out the endianness of `asShortBuffer`.
+	def nioShortBuffer = nioByteBuffer.asShortBuffer()
+	def numSamplesInEveryChannel = nioShortBuffer.remaining()
+	assert numSamplesInEveryChannel % channels == 0
+	int numSamplesPerChannel = numSamplesInEveryChannel / channels
+	def getSample = [
+		"interleaved": { sampleIndex, channel ->
+			return nioShortBuffer.get(
+				nioShortBuffer.position()
+					+ sampleIndex * channels + channel )
+		},
+		"non-interleaved": { sampleIndex, channel ->
+			return nioShortBuffer.get(
+				nioShortBuffer.position()
+					+ sampleIndex + channel * numSamplesPerChannel )
+		}
+	][ layoutString ]
+	assert getSample != null
 	
 	int maxAbsolute = 0
 	int minAbsolute = 0x10000
 	long sumAbsolute = 0
 	long sumSquare = 0
-	for ( long s = 0; s < numSamples; s++ )
+	for ( int s = 0; s < numSamplesPerChannel; s++ )
 	for ( c in 0..<channels )
 	{
-		int sample = samples.getSample( s, c, format )
+		int sample = getSample( s, c )
 		int absolute = sample.abs()
 		maxAbsolute = Math.max( maxAbsolute, absolute )
 		minAbsolute = Math.min( minAbsolute, absolute )
@@ -148,13 +205,10 @@ reader.addListener( [ onAudioSamples: { IAudioSamplesEvent event ->
 	
 	if ( channels != 0 )
 	{
-		int sampleRate = samples.sampleRate
-		int numSamplesUsed = Math.min( Integer.MAX_VALUE, numSamples )
-		
 		// Collect the samples given by the event. We're only going to
 		// look at audio channel zero.
-		List sampleList = (0..<numSamplesUsed).
-			collect { samples.getSample it, 0, format }
+		List sampleList =
+			(0..<numSamplesPerChannel).collect { getSample it, 0 }
 		
 		// Calculate the FFT, which gives powers for each of several
 		// frequency bins, the first one smaller than the rest.
@@ -165,10 +219,10 @@ reader.addListener( [ onAudioSamples: { IAudioSamplesEvent event ->
 		// the positive half--so the first bin (the one at 0Hz) is
 		// half the size of the rest.
 		double[] fftLibraryResult = sampleList
-		new DoubleFFT_1D( numSamplesUsed ).
+		new DoubleFFT_1D( numSamplesPerChannel ).
 			realForward fftLibraryResult
 		List complexBins = [] + (fftLibraryResult as List)
-		if ( 1 < numSamplesUsed )
+		if ( 1 < numSamplesPerChannel )
 		{
 			complexBins.add complexBins[ 1 ]
 			complexBins[ 1 ] = (double)0
@@ -178,7 +232,7 @@ reader.addListener( [ onAudioSamples: { IAudioSamplesEvent event ->
 			(0..<numberOfBins).collect { complexBins[ it << 1 ] }
 		List binEndsInHertz = [ (double)0 ] + (1..numberOfBins).
 			collect { (it - (double)0.5) * sampleRate /
-				numSamplesUsed }
+				numSamplesPerChannel }
 		
 		// Resample the frequency spectrum by converting the
 		// frequencies to mel (a logarithmic transformation of Hz
@@ -378,14 +432,52 @@ reader.addListener( [ onAudioSamples: { IAudioSamplesEvent event ->
 	
 	maxAbsolutes.add( (double)maxAbsolute / 0x10000 )
 	minAbsolutes.add( (double)minAbsolute / 0x10000 )
-	meanAbsolutes.add( (double)sumAbsolute / numSamples / 0x10000 )
+	meanAbsolutes.add(
+		(double)sumAbsolute / numSamplesPerChannel / 0x10000 )
 	rootMeanSquares.add(
-		Math.sqrt( (double)sumSquare / numSamples ) / 0x10000 )
-} ] as MediaToolAdapter )
+		Math.sqrt( (double)sumSquare / numSamplesPerChannel )
+			/ 0x10000 )
+	
+	return PadProbeReturn.OK
+}
 
+def handleSample = { Sample sample ->
+	def caps = sample.caps
+	if ( caps == null ) {
+		throw new NullPointerException()
+	}
+	def capsStructure = caps.getStructure 0
+	def gstBuffer = sample.buffer
+	def isWritable = false
+	def nioByteBuffer = gstBuffer.map isWritable
+	try {
+		handleSampleWithMappedBuffer capsStructure, nioByteBuffer
+	} finally {
+		gstBuffer.unmap()
+	}
+	
+	return FlowReturn.OK
+}
+
+dstAppSink.connect( (AppSink.NEW_SAMPLE) { dstAppSink2 ->
+	return handleSample( dstAppSink2.pullSample() )
+} )
+dstAppSink.connect( (AppSink.NEW_PREROLL) { dstAppSink2 ->
+	return handleSample( dstAppSink2.pullPreroll() )
+} )
+
+
+pipe.getBus().connect( (Bus.ERROR) { source, code, message ->
+	System.err.println message
+	Gst.quit()
+} )
+pipe.getBus().connect( (Bus.EOS) { source ->
+	Gst.quit()
+} )
 
 long start = System.currentTimeMillis()
-while ( reader.readPacket() == null ) {}
+pipe.play()
+Gst.main()
 long time = System.currentTimeMillis() - start
 
 
@@ -463,3 +555,10 @@ evocative demonstration of the MFCC):"""
 
 println ""
 println "Done!"
+
+
+// Close the file opened by GStreamer.
+//
+// TODO: See if there's a better way to do this.
+//
+System.exit 0

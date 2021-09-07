@@ -1,76 +1,66 @@
 // RgbArrayListenerTool.java
 //
-// Copyright 2009, 2010 Ross Angle
+// Copyright 2009, 2010, 2021 Ross Angle
 
 package com.rocketnia.mvtron.analyzer;
 
-import java.awt.image.BufferedImage;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
-import com.xuggle.mediatool.event.IAddStreamEvent;
-import com.xuggle.mediatool.event.IAudioSamplesEvent;
-import com.xuggle.mediatool.event.ICloseCoderEvent;
-import com.xuggle.mediatool.event.ICloseEvent;
-import com.xuggle.mediatool.event.IFlushEvent;
-import com.xuggle.mediatool.event.IOpenCoderEvent;
-import com.xuggle.mediatool.event.IOpenEvent;
-import com.xuggle.mediatool.event.IReadPacketEvent;
-import com.xuggle.mediatool.event.IVideoPictureEvent;
-import com.xuggle.mediatool.event.IWriteHeaderEvent;
-import com.xuggle.mediatool.event.IWritePacketEvent;
-import com.xuggle.mediatool.event.IWriteTrailerEvent;
-import com.xuggle.mediatool.IMediaListener;
+import org.freedesktop.gstreamer.Buffer;
+import org.freedesktop.gstreamer.Caps;
+import org.freedesktop.gstreamer.Pad;
+import org.freedesktop.gstreamer.PadProbeInfo;
+import org.freedesktop.gstreamer.PadProbeReturn;
+import org.freedesktop.gstreamer.Structure;
 
-// This class will pass along any BufferedImage events it receives to
-// an IRgbArrayListener object. It uses the same int array over and
-// over for efficency's sake, but interfacing code should not rely on
-// that behavior.
-public class RgbArrayListenerTool implements IMediaListener
+// This class will pass along any events it receives to an
+// IRgbArrayListener object. It uses the same int array over and over
+// for efficency's sake, but interfacing code should not rely on that
+// behavior.
+//
+// TODO: See if there's a way we can detect whether the pad is giving
+// us data in RGB format. For now, we just assume it is.
+//
+public class RgbArrayListenerTool implements Pad.PROBE
 {
 	private IIntArrayReferenceListener delegate;
-	private int[] rgb = null;
-	private int minX = 0;
-	private int minY = 0;
-	private int width = 0;
-	private int height = 0;
+	private int[] arrayBuffer = null;
 	
 	public RgbArrayListenerTool( IIntArrayReferenceListener delegate )
 		{ this.delegate = delegate; }
 	
-	// NOTE: All of these would have @Override if the Groovy-Eclipse
-	// plugin could understand that they actually overrode things.
-	public void onAddStream( IAddStreamEvent event ) {}
-	public void onAudioSamples( IAudioSamplesEvent event ) {}
-	public void onClose( ICloseEvent event ) {}
-	public void onCloseCoder( ICloseCoderEvent event ) {}
-	public void onFlush( IFlushEvent event ) {}
-	public void onOpen( IOpenEvent event ) {}
-	public void onOpenCoder( IOpenCoderEvent event ) {}
-	public void onReadPacket( IReadPacketEvent event ) {}
-	
 	// @Override
-	public void onVideoPicture( IVideoPictureEvent event )
-	{
-		BufferedImage image = event.getImage();
-		
-		if ( image == null ) return;
-		
-		if ( rgb == null )
-		{
-			minX = image.getMinX();
-			minY = image.getMinY();
-			width = image.getWidth();
-			height = image.getHeight();
+	public PadProbeReturn probeCallback( Pad pad, PadProbeInfo info ) {
+		Caps caps = pad.getCurrentCaps();
+		if ( caps == null ) {
+			throw new NullPointerException();
+		}
+		Structure capsStructure = caps.getStructure( 0 );
+		int width = capsStructure.getInteger( "width" );
+		int height = capsStructure.getInteger( "height" );
+		int arrayBufferSize = width * height;
+		if ( arrayBuffer == null ) {
+			arrayBuffer = new int[ arrayBufferSize ];
+		} else if ( arrayBuffer.length != arrayBufferSize ) {
+			throw new RuntimeException();
 		}
 		
-		rgb =
-			image.getRGB( minX, minY, width, height, rgb, 0, width );
+		Buffer gstBuffer = info.getBuffer();
+		boolean isWritable = false;
+		ByteBuffer nioByteBuffer = gstBuffer.map( isWritable );
+		try {
+			IntBuffer nioIntBuffer = nioByteBuffer.asIntBuffer();
+			if ( nioIntBuffer.remaining() != arrayBufferSize ) {
+				throw new RuntimeException();
+			}
+			nioIntBuffer.get( arrayBuffer );
+		} finally {
+			gstBuffer.unmap();
+		}
 		
-		delegate.onIntArrayReference( rgb );
+		delegate.onIntArrayReference( arrayBuffer );
+		
+		return PadProbeReturn.OK;
 	}
-	
-	// NOTE: All of these would have @Override if the Groovy-Eclipse
-	// plugin could understand that they actually overrode things.
-	public void onWriteHeader( IWriteHeaderEvent event ) {}
-	public void onWritePacket( IWritePacketEvent event ) {}
-	public void onWriteTrailer( IWriteTrailerEvent event ) {}
 }

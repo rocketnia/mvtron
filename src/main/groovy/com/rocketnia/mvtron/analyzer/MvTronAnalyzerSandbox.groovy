@@ -1,8 +1,19 @@
 // MVTronAnalyzerSandbox.groovy
 //
-// Copyright 2009, 2010 Ross Angle
+// Copyright 2009, 2010, 2021 Ross Angle
 
 package com.rocketnia.mvtron.analyzer
+
+import org.freedesktop.gstreamer.Bus
+import org.freedesktop.gstreamer.Gst
+import org.freedesktop.gstreamer.Pad
+import org.freedesktop.gstreamer.PadProbeReturn
+import org.freedesktop.gstreamer.PadProbeType
+import org.freedesktop.gstreamer.Pipeline
+import org.freedesktop.gstreamer.Version
+import org.freedesktop.gstreamer.elements.AppSink
+
+import com.rocketnia.mvtron.analyzer.scenedetectors.EuclideanSceneDetector
 
 
 def read = System.in.newReader().&readLine
@@ -19,81 +30,26 @@ places to look for scene breaks.
 What file should be used? '''; def filename = read()
 println ""
 
-import java.awt.image.BufferedImage
-import com.xuggle.mediatool.event.IVideoPictureEvent
-import com.xuggle.mediatool.event.VideoPictureEvent
-import com.xuggle.mediatool.MediaToolAdapter
-import com.xuggle.mediatool.ToolFactory
-import com.xuggle.xuggler.video.IConverter
-import com.rocketnia.mvtron.analyzer.scenedetectors.
-	EuclideanSceneDetector
 
+Gst.init Version.BASELINE, "MVTronAnalyzerSandbox"
 
-// TODO: Figure out whether these will be needed.
-/*
-class ClosureImageListener extends MediaToolAdapter
-{
-	private Closure closure
-	
-	public ClosureImageListener( Closure closure )
-		{ this.closure = closure }
-	
-	public void onVideoPicture( IVideoPictureEvent event )
-	{
-		def result = closure( event.image ?: event.picture )
-		
-		// Let this event fall through to any listeners.
-		super.onVideoPicture event
-	}
-}
+def pipelineSpec = """
+	filesrc name=src ! decodebin ! videoconvert
+	! video/x-raw, format=xRGB ! appsink name=dst
+"""
+def pipe = (Pipeline) Gst.parseLaunch( pipelineSpec )
+def src = pipe.getElementByName( "src" )
+def dstAppSink = (AppSink) pipe.getElementByName( "dst" )
+dstAppSink.set "sync", false
+def dst = dstAppSink.getStaticPad( "sink" )
 
-class ConverterSwapTool extends MediaToolAdapter
-{
-	private IConverter converter
-	
-	public ConverterSwapTool( IConverter converter )
-		{ this.converter = converter }
-	
-	public ConverterSwapTool make( IConverter converter )
-		{ new ConverterSwapTool( converter ) }
-	
-	public void onVideoPicture( IVideoPictureEvent event )
-	{
-		def oldImage = event.image
-		def oldPicture = event.picture
-		
-		def timeStamp = event.timeStamp
-		
-		def newPicture = oldImage == null ? null :
-			converter.toPicture( oldImage, timeStamp )
-		
-		def newImage = oldPicture == null ? null :
-			converter.toImage( oldPicture )
-		
-		def newEvent = new VideoPictureEvent(
-			this,
-			newPicture,
-			newImage,
-			timeStamp,
-			event.timeUnit,
-			event.streamIndex
-		)
-		
-		listeners.each { it.onVideoPicture newEvent }
-	}
-}
-
-def il = { new ClosureImageListener( it ) }
-*/
-
-def reader = ToolFactory.makeReader( filename )
-
-reader.setBufferedImageTypeToGenerate BufferedImage.TYPE_3BYTE_BGR
+src.set "location", filename
 
 
 SceneDetectorTool detector = EuclideanSceneDetector.makeTool()
 IntArrayTimeWindower windower = detector.newWindower( 1 )
-reader.addListener( windower.newTool() )
+dst.addProbe( PadProbeType.BUFFER,
+	new RgbArrayListenerTool( windower ) )
 List< Double > distances = new ArrayList< Double >()
 distances.add( (double)0 )
 detector.addListener( {
@@ -103,8 +59,24 @@ detector.addListener( {
 } as IDoubleListener )
 
 
+// Since we added at least one probe, we add another to be processed
+// after the others, which formally declares that the probes are done
+// with this buffer.
+dst.addProbe( PadProbeType.BUFFER, (Pad.PROBE) { pad, info ->
+	return PadProbeReturn.HANDLED
+} )
+
+pipe.getBus().connect( (Bus.ERROR) { source, code, message ->
+	System.err.println message
+	Gst.quit()
+} )
+pipe.getBus().connect( (Bus.EOS) { source ->
+	Gst.quit()
+} )
+
 long start = System.currentTimeMillis()
-while ( reader.readPacket() == null ) {}
+pipe.play()
+Gst.main()
 // The windower made above would be closed now, but that doesn't
 // actually do anything in this case.
 long time = System.currentTimeMillis() - start
@@ -161,3 +133,10 @@ if ( numberOfFrames != 0 )
 
 println ""
 println "Done!"
+
+
+// Close the file opened by GStreamer.
+//
+// TODO: See if there's a better way to do this.
+//
+System.exit 0

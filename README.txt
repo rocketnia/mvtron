@@ -20,28 +20,13 @@ audio.
 For the moment, these features take form as a scattered collection of
 demos, JVM classes with "Sandbox" in their names, which can be run
 from the command line. You'll need a video of your own handy; we're
-not keeping those in the repository. ^_^ You'll also need to get
-version 3.3.940 of Xuggler from
-http://xuggle.com/xuggler/downloads/releases.jsp and version 2.3 of
-JTransforms from
-http://sites.google.com/site/piotrwendykier/software/jtransforms. If
-you'd like to use the Gradle build script (the only build script we've
-got), you should put the Xuggler and JTransforms .jars in a fresh lib/
-directory in the root of this repo. The .gitignore file is already set
-up to ignore that directory, to reduce the risk of inadvertently
-putting binary form LGPLed libraries in the repo without their source.
-(Xuggler is licensed under the LGPL, but JTransforms is licensed under
-an MPL/GPL/LGPL disjunctive license.)
+not keeping those in the repository. ^_^
 
-Finally, Xuggler will also need to have its native dependencies
-installed on whatever machine you're using to run MVTron. You should
-be able to get an installer from the same place you got Xuggler. Yeah,
-this may make MVTron a pain to install, but MVTron is a tool primarily
-targeted at myself and secondarily targeted at programmers and
-programming-tolerant artists. Ease-of-installation isn't a priority
-yet.
+To use MVTron, you'll need an environment for JDK development with
+Groovy and Gradle, with which you can obtain further dependencies from
+Maven that are declared in build.gradle. You'll also need GStreamer
+installed, and you'll need to add GStreamer's bin directory to your
+`PATH`, which isn't something the GStreamer Windows installer does by
+default.
 
-For more information about the design goals and mechanisms of MVTron,
-you can see my blog at http://rocketnia.wordpress.com/.
-
-2010 Ross Angle
+2010, 2021 Ross Angle

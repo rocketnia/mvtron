@@ -1,6 +1,6 @@
 // build.gradle
 //
-// Copyright 2010 Ross Angle
+// Copyright 2010, 2021 Ross Angle
 
 
 // Create everyday tasks. The MVTron project layout is arranged
@@ -8,60 +8,35 @@
 // need much more configuration than this. Some of the most useful
 // tasks defined this way are "build", "clean", "eclipse", and
 // "eclipseClean".
-apply plugin: 'eclipse'
-apply plugin: 'groovy'
+plugins {
+	id 'eclipse'
+	id 'groovy'
+}
 
 // A couple of our dependencies will be resolved (and downloaded, if
 // necessary) from the central Maven repository.
-repositories { mavenCentral() }
+repositories {
+	mavenCentral()
+}
 
 dependencies {
 	
 	// Gradle's Groovy plugin doesn't specify the Groovy
 	// implementation for us, so we specify it ourselves.
-	groovy 'org.codehaus.groovy:groovy:1.7.5'
+	implementation 'org.codehaus.groovy:groovy-all:3.0.8'
 	
 	// Gradle's unit test support requires us to specify a tool for
 	// that as well. However, right now we don't have any tests, so
 	// we'll leave this out!
-//	testCompile 'junit:junit:4.8.2'
-}
-
-
-// We also have a compile-time dependency on the .jar files in the
-// lib directory, which is Git-ignored. Particularly, that directory
-// should include Xuggler 3.3.940 (and its dependencies) and
-// and JTransforms 2.3.
-
-// Gradle puts Commons CLI at the end of the classpath by default, and
-// the version of Xuggler we're using depends on a different,
-// incompatible version of Commons CLI. This breaks
-// org.codehaus.groovy.tools.FileSystemCompiler's argument parsing,
-// causing it to think "-Jtarget=1.5" refers to some file called
-// "target=1.5". In order to fix this, we're doing some surgery to get
-// the path(s) to the version of Commons CLI that works, and we're
-// putting that result before our own paths.
-
-def registeredCommonsCli = compileGroovy.getServices().get(
-	org.gradle.api.internal.ClassPathRegistry.class ).
-	getClassPathFiles( "COMMONS_CLI" )
-
-dependencies {
+//	testImplementation 'junit:junit:4.8.2'
 	
-	compile files(
-		registeredCommonsCli,
-		'lib/jtransforms-2.3.jar',
-		'lib/xuggle-xuggler.jar'
-	)
+	// We depend on GStreamer 1.x Java Core (gst1-java-core), a
+	// GStreamer binding library.
+	implementation 'org.freedesktop.gstreamer:gst1-java-core:1.4.0'
 	
-	// Thanks to a Class-Path manifest attribute in the the
-	// Xuggler jar, these are used whether or not we specify them.
-	// That just makes the Commons CLI conflict worse.
-//		'lib/commons-cli.jar',
-//		'lib/logback-classic.jar',
-//		'lib/logback-core.jar',
-//		'lib/slf4j-api.jar',
-//		'lib/xuggle-xuggler-test.jar',
+	// We depend on JTransforms, an FFT library.
+	implementation 'com.github.wendykierp:JTransforms:3.1:with-dependencies'
+	
 }
 
 

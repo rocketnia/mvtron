@@ -1,23 +1,29 @@
 // MVTronAnalyzerJavaSandbox.java
 //
-// Copyright 2009, 2010 Ross Angle
+// Copyright 2009, 2010, 2021 Ross Angle
 
 package com.rocketnia.mvtron.analyzer;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.Scanner;
 import java.util.TreeSet;
 
+import org.freedesktop.gstreamer.Bus;
+import org.freedesktop.gstreamer.Element;
+import org.freedesktop.gstreamer.Gst;
+import org.freedesktop.gstreamer.Pad;
+import org.freedesktop.gstreamer.PadProbeReturn;
+import org.freedesktop.gstreamer.PadProbeType;
+import org.freedesktop.gstreamer.Pipeline;
+import org.freedesktop.gstreamer.Version;
+import org.freedesktop.gstreamer.elements.AppSink;
 
 import com.rocketnia.mvtron.analyzer.scenedetectors.
 	EuclideanSceneDetector;
 import com.rocketnia.mvtron.analyzer.scenedetectors.
 	TaxicabSceneDetector;
-import com.xuggle.mediatool.IMediaReader;
-import com.xuggle.mediatool.ToolFactory;
 
 public class MvTronAnalyzerJavaSandbox
 {
@@ -41,17 +47,26 @@ public class MvTronAnalyzerJavaSandbox
 		String filename = in.nextLine();
 		prn();
 		
-		IMediaReader reader = ToolFactory.makeReader( filename );
+		Gst.init( Version.BASELINE, "MVTronAnalyzerJavaSandbox.main2()" );
 		
-		reader.setBufferedImageTypeToGenerate(
-			BufferedImage.TYPE_3BYTE_BGR );
+		String pipelineSpec =
+			"filesrc name=src ! decodebin ! videoconvert "
+			+ "! video/x-raw, format=xRGB ! appsink name=dst";
+		Pipeline pipe = (Pipeline) Gst.parseLaunch( pipelineSpec );
+		Element src = pipe.getElementByName( "src" );
+		AppSink dstAppSink = (AppSink) pipe.getElementByName( "dst" );
+		dstAppSink.set( "sync", false );
+		Pad dst = dstAppSink.getStaticPad( "sink" );
+		
+		src.set( "location", filename );
 		
 		
 		SceneDetectorTool singleDetector =
 			TaxicabSceneDetector.makeTool();
 		IntArrayTimeWindower singleWindower =
 			singleDetector.newWindower( 1 );
-		reader.addListener( singleWindower.newTool() );
+		dst.addProbe( PadProbeType.BUFFER,
+			new RgbArrayListenerTool( singleWindower ) );
 		final List< Double > singleDistances =
 			new ArrayList< Double >();
 		singleDistances.add( (double)0 );
@@ -68,7 +83,8 @@ public class MvTronAnalyzerJavaSandbox
 			TaxicabSceneDetector.makeTool();
 		IntArrayTimeWindower doubleWindower =
 			doubleDetector.newWindower( 2 );
-		reader.addListener( doubleWindower.newTool() );
+		dst.addProbe( PadProbeType.BUFFER,
+			new RgbArrayListenerTool( doubleWindower ) );
 		final List< Double > doubleDistances =
 			new ArrayList< Double >();
 		doubleDistances.add( (double)0 );
@@ -83,8 +99,26 @@ public class MvTronAnalyzerJavaSandbox
 		} );
 		
 		
+		// Since we added at least one probe, we add another to be
+		// processed after the others, which formally declares that
+		// the probes are done with this buffer.
+		dst.addProbe( PadProbeType.BUFFER,
+			(Pad.PROBE) (( pad, info ) -> {
+				return PadProbeReturn.HANDLED;
+			}) );
+		
+		pipe.getBus()
+			.connect( (Bus.ERROR) (( source, code, message ) -> {
+				System.err.println( message );
+				Gst.quit();
+			}) );
+		pipe.getBus().connect( (Bus.EOS) (( source ) -> {
+			Gst.quit();
+		}) );
+		
 		long start = System.currentTimeMillis();
-		while ( reader.readPacket() == null ) {}
+		pipe.play();
+		Gst.main();
 		// The windowers made above would be closed now, but that
 		// doesn't actually do anything in this case.
 		long time = System.currentTimeMillis() - start;
@@ -148,12 +182,19 @@ public class MvTronAnalyzerJavaSandbox
 		
 		prn();
 		prn( "Done!" );
+		
+		// Close the file opened by GStreamer.
+		//
+		// TODO: See if there's a better way to do this.
+		//
+		System.exit( 0 );
 	}
 	
 	public static void main( String[] args )
 	{
 		Scanner in = new Scanner( System.in );
 		
+		prn( System.getenv( "PATH" ) );
 		prn( "This sandbox will loop through a video, printing the"
 			+ " distances found" );
 		prn( "between each frame and the frame behind it, scaled to"
@@ -170,16 +211,25 @@ public class MvTronAnalyzerJavaSandbox
 		String filename = in.nextLine();
 		prn();
 		
-		IMediaReader reader = ToolFactory.makeReader( filename );
+		Gst.init( Version.BASELINE, "MVTronAnalyzerJavaSandbox.main()" );
 		
-		reader.setBufferedImageTypeToGenerate(
-			BufferedImage.TYPE_3BYTE_BGR );
+		String pipelineSpec =
+			"filesrc name=src ! decodebin ! videoconvert "
+			+ "! video/x-raw, format=xRGB ! appsink name=dst";
+		Pipeline pipe = (Pipeline) Gst.parseLaunch( pipelineSpec );
+		Element src = pipe.getElementByName( "src" );
+		AppSink dstAppSink = (AppSink) pipe.getElementByName( "dst" );
+		dstAppSink.set( "sync", false );
+		Pad dst = dstAppSink.getStaticPad( "sink" );
+		
+		src.set( "location", filename );
 		
 		
 		SceneDetectorTool detector =
 			EuclideanSceneDetector.makeTool();
 		IntArrayTimeWindower windower = detector.newWindower( 1 );
-		reader.addListener( windower.newTool() );
+		dst.addProbe( PadProbeType.BUFFER,
+			new RgbArrayListenerTool( windower ) );
 		final List< Double > distances = new ArrayList< Double >();
 		distances.add( (double)0 );
 		detector.addListener( new IDoubleListener() {
@@ -192,8 +242,26 @@ public class MvTronAnalyzerJavaSandbox
 		} );
 		
 		
+		// Since we added at least one probe, we add another to be
+		// processed after the others, which formally declares that
+		// the probes are done with this buffer.
+		dst.addProbe( PadProbeType.BUFFER,
+			(Pad.PROBE) (( pad, info ) -> {
+				return PadProbeReturn.HANDLED;
+			}) );
+		
+		pipe.getBus()
+			.connect( (Bus.ERROR) (( source, code, message ) -> {
+				System.err.println( message );
+				Gst.quit();
+			}) );
+		pipe.getBus().connect( (Bus.EOS) (( source ) -> {
+			Gst.quit();
+		}) );
+		
 		long start = System.currentTimeMillis();
-		while ( reader.readPacket() == null ) {}
+		pipe.play();
+		Gst.main();
 		// The windower made above would be closed now, but that
 		// doesn't actually do anything in this case.
 		long time = System.currentTimeMillis() - start;
@@ -255,6 +323,12 @@ public class MvTronAnalyzerJavaSandbox
 		
 		prn();
 		prn( "Done!" );
+		
+		// Close the file opened by GStreamer.
+		//
+		// TODO: See if there's a better way to do this.
+		//
+		System.exit( 0 );
 	}
 	
 	private static void prn() { System.out.println(); }

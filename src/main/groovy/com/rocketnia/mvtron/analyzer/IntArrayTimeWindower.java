@@ -1,6 +1,6 @@
 // IntArrayTimeWindower.java
 //
-// Copyright 2009, 2010 Ross Angle
+// Copyright 2009, 2010, 2021 Ross Angle
 
 package com.rocketnia.mvtron.analyzer;
 
@@ -27,9 +27,6 @@ public class IntArrayTimeWindower
 		this.numberOfFrames = numberOfFrames;
 		fullWindow = (numberOfFrames == 0);
 	}
-	
-	public RgbArrayListenerTool newTool()
-		{ return new RgbArrayListenerTool( this ); }
 	
 	// @Override
 	public void onIntArrayReference( int[] array )

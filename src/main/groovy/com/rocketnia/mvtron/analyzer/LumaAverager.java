@@ -1,6 +1,6 @@
 // LumaAverager.java
 //
-// Copyright 2009, 2010 Ross Angle
+// Copyright 2009, 2010, 2021 Ross Angle
 
 package com.rocketnia.mvtron.analyzer;
 
@@ -17,12 +17,6 @@ public class LumaAverager implements IIntArrayReferenceListener
 	private static final double maxAverageLuma = 0xFF * 3;
 	
 	public LumaAverager() {}
-	
-	public static RgbArrayListenerTool makeTool()
-		{ return new RgbArrayListenerTool( new LumaAverager() ); }
-	
-	public RgbArrayListenerTool newTool()
-		{ return new RgbArrayListenerTool( this ); }
 	
 	// @Override
 	public void onIntArrayReference( int[] rgb )
