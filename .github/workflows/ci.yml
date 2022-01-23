@@ -1,0 +1,27 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        jdk-distribution: ["temurin"]
+        
+        # Versions 8 and 17 are the earliest versions the
+        # `actions/setup-java@v2` action claims to support.
+        #
+        jdk-version: ["8", "17"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Validate the Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Set up a JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: ${{ matrix.jdk-distribution }}
+          java-version: ${{ matrix.jdk-version }}
+      - name: Build
+        run: ./gradlew build --info
