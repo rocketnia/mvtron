@@ -1,16 +1,18 @@
 // build.gradle
 //
-// Copyright 2010, 2021 Ross Angle
+// Copyright 2010, 2021-2022 Rocketnia
 
 
 // Create everyday tasks. The MVTron project layout is arranged
 // according to the default Gradle conventions just so that we don't
 // need much more configuration than this. Some of the most useful
 // tasks defined this way are "build", "clean", "eclipse", and
-// "eclipseClean".
+// "cleanEclipse".
 plugins {
-	id 'eclipse'
+	id 'java-library'
+	id 'application'
 	id 'groovy'
+	id 'eclipse'
 }
 
 // A couple of our dependencies will be resolved (and downloaded, if
@@ -42,3 +44,15 @@ dependencies {
 
 // Make sure the jar is named mvtron.jar rather than anything else.
 archivesBaseName = 'mvtron'
+
+
+application {
+//	mainClass = 'com.rocketnia.mvtron.analyzer.MvTronAnalyzerJavaSandbox'
+	mainClass = 'com.rocketnia.mvtron.analyzer.MvTronAnalyzerSandbox'
+//	mainClass = 'com.rocketnia.mvtron.analyzer.MvTronAudioSandbox'
+//	mainClass = 'com.rocketnia.mvtron.analyzer.MvTronBeatSandbox'
+}
+
+run {
+	standardInput = System.in
+}
